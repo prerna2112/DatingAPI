@@ -47,6 +47,7 @@ namespace DatingAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserForLoginDto userForLogin)
         {
+            //throw new Exception("Application!");
             var userFormRepo = await _repo.Login(userForLogin.UserName.ToLower(), userForLogin.Password);
             //first we are making sure that we have a user in our database with these username and password.
 
