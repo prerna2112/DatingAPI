@@ -29,5 +29,7 @@ namespace DatingAPI.Dtos
             Created = DateTime.Now;
             LastActive = DateTime.Now;
         }
+       
+        public string Gender { get; set; }
     }
 }

@@ -8,9 +8,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DatingAPI.Dtos;
 using System.Security.Claims;
+using DatingAPI.Helpers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace DatingAPI.Controllers
-{   [Authorize]
+{
+    [ServiceFilter(typeof(LogUserActivity))]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -24,10 +29,20 @@ namespace DatingAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams)
         {
-            var users = await _datingRepository.GetUsers();
+            var loggedInUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userFromRepo = await _datingRepository.GetUser(loggedInUserId);
+            userParams.UserId = loggedInUserId;
+            if (string.IsNullOrEmpty(userParams.Gender))
+            {
+                userParams.Gender = userFromRepo.Gender == "male" ? "female" : "male";
+            }
+            var users = await _datingRepository.GetUsers(userParams);
             var usersToReturn = _impapper.Map<IEnumerable<UserForListDto>>(users);
+            
+
+            Response.AddPagination(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
             return Ok(usersToReturn);
         }
         [HttpGet("{id}", Name = "GetUser")]

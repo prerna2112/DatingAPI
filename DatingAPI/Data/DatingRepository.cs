@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DatingAPI.Helpers;
 using DatingAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,10 +42,28 @@ namespace DatingAPI.Data
             return user;
         }
 
-        public async Task<IEnumerable<User>> GetUsers()
+        public async Task<PagedList<User>> GetUsers(UserParams userParams)
         {
-            var users = await _dataContext.Users.Include(p => p.Photos).ToListAsync();
-            return users;
+            var users =  _dataContext.Users.Include(p => p.Photos).AsQueryable();
+            users = users.Where(u => u.Id != userParams.UserId && u.Gender == userParams.Gender );
+            users = users.Where(u => u.DateOFBirth.Age() >= userParams.MinAge && u.DateOFBirth.Age() <= userParams.MaxAge);
+            if(!string.IsNullOrEmpty(userParams.OrderBy))
+            {
+                switch (userParams.OrderBy)
+                {
+                    case "created":
+                        users = users.OrderByDescending(u => u.Created);
+                        break;
+                    default:
+                        users = users.OrderByDescending(u => u.LastActive);
+                        break;
+                }
+            }
+            else
+            {
+                users = users.OrderByDescending(u => u.LastActive);
+            }
+            return await PagedList<User>.CreateAsync(users,userParams.PageNumber,userParams.pageSize);
         }
 
         public async Task<bool> SaveAll()

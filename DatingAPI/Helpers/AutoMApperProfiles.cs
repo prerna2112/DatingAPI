@@ -22,7 +22,8 @@ namespace DatingAPI.Helpers
             CreateMap<UserForUpdate, User>();
             CreateMap<Photo, PhotoForReturnDto>();
             CreateMap<photoForCreationDto, Photo>();
-            CreateMap<UserForRegisterDto, User>();
+            CreateMap<UserForRegisterDto, User>()
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOFBirth.Age()));
 
         }
     }
